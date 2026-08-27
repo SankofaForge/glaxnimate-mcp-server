@@ -1,0 +1,19 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "glaxnimate-mcp-server"
+version = "0.1.0"
+description = "A portable MCP server for inspecting and animating SVG assets for Glaxnimate workflows"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+authors = [{ name = "Yonas Valentin" }]
+dependencies = ["mcp>=1.12,<2"]
+
+[project.scripts]
+glaxnimate-mcp = "glaxnimate_mcp.server:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/glaxnimate_mcp"]
