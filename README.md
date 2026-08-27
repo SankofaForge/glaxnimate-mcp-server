@@ -11,16 +11,31 @@ Glaxnimate has a headless Python API in its source tree, but the published Pytho
 
 `glaxnimate_animate_svg` returns both an animated SVG and the original SVG for reduced-motion handling. Use the static version when the host page detects `prefers-reduced-motion: reduce`.
 
-## Local runtime
+## Install
 
-The configured clients launch this server on `ampere-dev` over SSH. That keeps Python dependencies and generated environment files off the Mac while making the same MCP tools available in Claude Code, Antigravity, and Codex.
+This project requires Python 3.11 or newer. From a checkout of the repository, create a virtual environment and install the package:
+
+```bash
+python -m venv .venv
+. .venv/bin/activate
+python -m pip install --upgrade pip
+python -m pip install .
+```
+
+Configure your MCP client to launch `glaxnimate-mcp` over stdio. For clients that accept a JSON configuration, the command is:
+
+```json
+{
+  "command": "glaxnimate-mcp"
+}
+```
 
 ## Verification
 
-Run the unit tests through the VM wrapper:
+Run the unit tests from the repository root:
 
 ```bash
-verify-on-vm /absolute/path/to/glaxnimate-mcp-server "PYTHONPATH=src python -m unittest discover -s tests -v"
+PYTHONPATH=src python -m unittest discover -s tests -v
 ```
 
 ## License
