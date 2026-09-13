@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from typing import Any
 from xml.etree import ElementTree as ET
 
 SVG_NS = "http://www.w3.org/2000/svg"
@@ -56,7 +55,7 @@ def _id_index(root: ET.Element) -> dict[str, ET.Element]:
     return elements
 
 
-def inspect_svg(svg: str) -> dict[str, Any]:
+def inspect_svg(svg: str) -> dict[str, object]:
     """Return the IDs and basic structure that can be addressed by animation tools."""
     root = _parse_svg(svg)
     elements = _id_index(root)
@@ -78,7 +77,7 @@ def inspect_svg(svg: str) -> dict[str, Any]:
     }
 
 
-def _number(value: Any, name: str, minimum: float, maximum: float) -> float:
+def _number(value: object, name: str, minimum: float, maximum: float) -> float:
     if isinstance(value, bool) or not isinstance(value, (int, float)):
         raise AnimationError(f"{name} must be a number")
     number = float(value)
@@ -87,7 +86,7 @@ def _number(value: Any, name: str, minimum: float, maximum: float) -> float:
     return number
 
 
-def _values(raw: Any) -> list[str]:
+def _values(raw: object) -> list[str]:
     if not isinstance(raw, Sequence) or isinstance(raw, (str, bytes)):
         raise AnimationError("values must be an array of at least two values")
     if not 2 <= len(raw) <= MAX_KEYFRAMES:
@@ -98,7 +97,7 @@ def _values(raw: Any) -> list[str]:
     return values
 
 
-def _key_times(raw: Any, count: int) -> str:
+def _key_times(raw: object, count: int) -> str:
     if raw is None:
         if count == 2:
             return "0;1"
@@ -113,7 +112,7 @@ def _key_times(raw: Any, count: int) -> str:
     return ";".join(f"{value:.6g}" for value in key_times)
 
 
-def _animation_element(spec: Mapping[str, Any]) -> tuple[str, ET.Element]:
+def _animation_element(spec: Mapping[str, object]) -> tuple[str, ET.Element]:
     target_id = spec.get("target_id")
     if not isinstance(target_id, str) or not target_id.strip():
         raise AnimationError("target_id must be a non-empty string")
@@ -148,7 +147,7 @@ def _animation_element(spec: Mapping[str, Any]) -> tuple[str, ET.Element]:
     return target_id, ET.Element(_tag("animate"), attributes)
 
 
-def animate_svg(svg: str, animations: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
+def animate_svg(svg: str, animations: Sequence[Mapping[str, object]]) -> dict[str, object]:
     """Add SMIL keyframe animations to elements addressed by their SVG IDs."""
     if not isinstance(animations, Sequence) or isinstance(animations, (str, bytes)):
         raise AnimationError("animations must be an array")

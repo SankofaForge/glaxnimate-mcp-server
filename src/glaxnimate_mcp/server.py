@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
-from typing import Any
 
 from mcp.server.fastmcp import FastMCP
 
@@ -13,7 +12,7 @@ mcp = FastMCP("Glaxnimate-compatible SVG animation", json_response=True)
 
 
 @mcp.tool()
-def glaxnimate_inspect_svg(svg: str) -> dict[str, Any]:
+def glaxnimate_inspect_svg(svg: str) -> dict[str, object]:
     """Inspect an SVG and list the element IDs that can receive animation keyframes.
 
     Give generated artwork stable, semantic IDs such as character, arm-left, eye-right,
@@ -28,8 +27,8 @@ def glaxnimate_inspect_svg(svg: str) -> dict[str, Any]:
 @mcp.tool()
 def glaxnimate_animate_svg(
     svg: str,
-    animations: Sequence[Mapping[str, Any]],
-) -> dict[str, Any]:
+    animations: Sequence[Mapping[str, object]],
+) -> dict[str, object]:
     """Add standards-based SMIL keyframes to a custom SVG.
 
     Each animation needs target_id, property, and values. Property is translate, rotate,
