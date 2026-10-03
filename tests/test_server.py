@@ -22,6 +22,12 @@ class ServerTests(unittest.TestCase):
         self.assertIn("animation_targets", result)
         self.assertEqual(result["animation_targets"], ["dot"])
 
+    def test_glaxnimate_inspect_svg_dry_run(self) -> None:
+        result = glaxnimate_inspect_svg(SVG, dry_run=True)
+        self.assertEqual(result["animation_targets"], ["dot"])
+        self.assertIs(result["dry_run"], True)
+        self.assertIs(result["output_written"], False)
+
     def test_glaxnimate_inspect_svg_error(self) -> None:
         result = glaxnimate_inspect_svg("invalid xml")
         self.assertIn("error", result)
@@ -34,6 +40,17 @@ class ServerTests(unittest.TestCase):
         )
         self.assertIn("animated_svg", result)
         self.assertEqual(result["targets"], ["dot"])
+
+    def test_glaxnimate_animate_svg_dry_run(self) -> None:
+        result = glaxnimate_animate_svg(
+            SVG,
+            [{"target_id": "dot", "property": "translate", "values": ["0 0", "10 0"]}],
+            dry_run=True,
+        )
+        self.assertIn("animated_svg", result)
+        self.assertIn("<animateTransform", result["animated_svg"])
+        self.assertIs(result["dry_run"], True)
+        self.assertIs(result["output_written"], False)
 
     def test_glaxnimate_animate_svg_error(self) -> None:
         result = glaxnimate_animate_svg(
