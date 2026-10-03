@@ -11,6 +11,10 @@ Glaxnimate has a headless Python API in its source tree, but the published Pytho
 
 `glaxnimate_animate_svg` returns both an animated SVG and the original SVG for reduced-motion handling. Use the static version when the host page detects `prefers-reduced-motion: reduce`.
 
+Both tools accept `dry_run` (default `false`). With `dry_run=true`, their
+responses include `dry_run: true` and `output_written: false`. The animation
+tool returns its generated SVG as a preview. Neither tool saves output.
+
 ## Install
 
 This project requires Python 3.11 or newer. From a checkout of the repository, create a virtual environment and install the package:
