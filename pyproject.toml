@@ -10,12 +10,18 @@ readme = "README.md"
 requires-python = ">=3.11"
 license = { text = "MIT" }
 authors = [{ name = "Yonas Valentin" }]
-dependencies = ["mcp>=1.12,<2"]
+dependencies = ["mcp>=1.12,<2", "fonttools>=4.60,<5"]
 
 [project.optional-dependencies]
+render = ["playwright>=1.56,<2"]
+fonts = ["uharfbuzz>=0.51,<1"]
+geometry = ["skia-pathops>=0.9,<1"]
 test = [
     "pytest>=8.0.0",
     "pytest-cov>=5.0.0",
+    "playwright>=1.56,<2",
+    "uharfbuzz>=0.51,<1",
+    "skia-pathops>=0.9,<1",
 ]
 
 [project.scripts]
