@@ -25,6 +25,61 @@ SVG = """<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBo
 
 
 class SvgAnimationTests(unittest.TestCase):
+    def test_motion_path(self) -> None:
+        base = {"target_id": "eye", "property": "motion-path", "values": [0, 0.5, 1],
+                "motion_path": "M0 0 Q50 100 100 0"}
+        result = animate_svg(SVG, [base])
+        self.assertIn('<animateMotion', result["animated_svg"])
+        self.assertIn('keyPoints="0;0.5;1"', result["animated_svg"])
+        self.assertIn('rotate="auto"', result["animated_svg"])
+        result = animate_svg(SVG, [base | {"motion_rotate": 45}])
+        self.assertIn('rotate="45"', result["animated_svg"])
+        for options in ({"motion_path": None}, {"motion_path": " "},
+                        {"motion_rotate": "invalid"}, {"values": [0, 2]}):
+            with self.subTest(options=options), self.assertRaises(AnimationError):
+                animate_svg(SVG, [base | options])
+
+    def test_extended_timeline(self) -> None:
+        from xml.etree import ElementTree as ET
+
+        spec = {
+            "target_id": "eye", "property": "fill", "values": ["red", "blue", "red"],
+            "calc_mode": "spline", "key_splines": [[0.4, 0, 0.2, 1], [0, 0, 1, 1]],
+            "repeat_count": "indefinite", "fill_mode": "remove",
+        }
+        result = animate_svg(SVG, [spec])
+        animation = ET.fromstring(result["animated_svg"]).find(".//{*}animate")
+        self.assertEqual(animation.attrib["keySplines"], "0.4 0 0.2 1;0 0 1 1")
+        self.assertEqual(animation.attrib["repeatCount"], "indefinite")
+        self.assertEqual(animation.attrib["fill"], "remove")
+        self.assertEqual(result["reduced_motion_svg"], SVG)
+        transform = animate_svg(SVG, [{
+            "target_id": "eye", "property": "skewX", "values": [0, 20], "additive": "sum",
+        }])
+        self.assertIn('additive="sum"', transform["animated_svg"])
+        self.assertIn('type="skewX"', transform["animated_svg"])
+        discrete = animate_svg(SVG, [{
+            "target_id": "eye", "property": "fill", "values": ["red", "blue"], "calc_mode": "discrete",
+        }])
+        self.assertIn('calcMode="discrete"', discrete["animated_svg"])
+
+    def test_extended_timeline_rejects_invalid_options(self) -> None:
+        base = {"target_id": "eye", "property": "translate", "values": [0, 1]}
+        for options, message in [
+            ({"property": []}, "property must"),
+            ({"calc_mode": "unknown"}, "calc_mode must"),
+            ({"fill_mode": "unknown"}, "fill_mode must"),
+            ({"additive": "unknown"}, "additive must"),
+            ({"calc_mode": "spline"}, "one curve per"),
+            ({"calc_mode": "spline", "key_splines": []}, "one curve per"),
+            ({"calc_mode": "spline", "key_splines": [None]}, "four numbers"),
+            ({"calc_mode": "spline", "key_splines": [[0, 1]]}, "four numbers"),
+            ({"calc_mode": "spline", "key_splines": [[0, 0, 1, 2]]}, "between 0 and 1"),
+            ({"key_splines": [[0, 0, 1, 1]]}, "requires calc_mode spline"),
+        ]:
+            with self.subTest(options=options), self.assertRaisesRegex(AnimationError, message):
+                animate_svg(SVG, [base | options])
+
     def test_package_init(self) -> None:
         self.assertTrue(pkg_file.endswith("__init__.py"))
 
@@ -94,9 +149,9 @@ class SvgAnimationTests(unittest.TestCase):
         with self.assertRaisesRegex(AnimationError, "must be an array of at least two values"):
             _values(123)
 
-        with self.assertRaisesRegex(AnimationError, "must contain 2 to 24 keyframes"):
+        with self.assertRaisesRegex(AnimationError, "must contain 2 to 512 keyframes"):
             _values(["0"])
-        with self.assertRaisesRegex(AnimationError, "must contain 2 to 24 keyframes"):
+        with self.assertRaisesRegex(AnimationError, "must contain 2 to 512 keyframes"):
             _values(["0"] * (MAX_KEYFRAMES + 1))
 
         with self.assertRaisesRegex(AnimationError, "must be non-empty plain values"):

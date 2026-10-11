@@ -8,7 +8,15 @@ from xml.etree import ElementTree as ET
 SVG_NS = "http://www.w3.org/2000/svg"
 MAX_SVG_BYTES = 1_000_000
 MAX_ANIMATIONS = 100
-MAX_KEYFRAMES = 24
+MAX_KEYFRAMES = 512
+TRANSFORM_PROPERTIES = frozenset({"translate", "rotate", "scale", "skewX", "skewY"})
+ANIMATION_PROPERTIES = TRANSFORM_PROPERTIES | frozenset({
+    "opacity", "path", "stroke-dashoffset", "stroke-dasharray", "stroke-width",
+    "fill", "fill-opacity", "stroke", "stroke-opacity", "stop-color", "stop-opacity",
+    "x", "y", "cx", "cy", "r", "rx", "ry", "width", "height", "offset", "motion-path",
+    "stdDeviation", "dx", "dy", "flood-color", "flood-opacity", "slope", "intercept",
+    "tableValues", "values", "points", "x1", "x2", "y1", "y2", "fx", "fy",
+})
 
 ET.register_namespace("", SVG_NS)
 
@@ -113,32 +121,73 @@ def _key_times(raw: object, count: int) -> str:
 
 
 def _animation_element(spec: Mapping[str, object]) -> tuple[str, ET.Element]:
+    if "easing" in spec:
+        from .easing import bake_animation
+        spec = bake_animation(spec)
     target_id = spec.get("target_id")
     if not isinstance(target_id, str) or not target_id.strip():
         raise AnimationError("target_id must be a non-empty string")
 
     property_name = spec.get("property")
-    valid_properties = {"translate", "rotate", "scale", "opacity", "path", "stroke-dashoffset"}
-    if property_name not in valid_properties:
-        valid = ", ".join(sorted(valid_properties))
+    if not isinstance(property_name, str) or property_name not in ANIMATION_PROPERTIES:
+        valid = ", ".join(sorted(ANIMATION_PROPERTIES))
         raise AnimationError(f"property must be one of: {valid}")
 
     values = _values(spec.get("values"))
     duration_ms = _number(spec.get("duration_ms", 1000), "duration_ms", 1, 600_000)
     begin_ms = _number(spec.get("begin_ms", 0), "begin_ms", 0, 600_000)
-    repeat_count = _number(spec.get("repeat_count", 1), "repeat_count", 1, 1000)
+    repeat = spec.get("repeat_count", 1)
+    repeat_count = "indefinite" if repeat == "indefinite" else f'{_number(repeat, "repeat_count", 1, 1000):g}'
     key_times = _key_times(spec.get("key_times"), len(values))
+    calc_mode = spec.get("calc_mode", "linear")
+    if calc_mode not in ("linear", "discrete", "spline"):
+        raise AnimationError("calc_mode must be linear, discrete, or spline")
+    fill_mode = spec.get("fill_mode", "freeze")
+    if fill_mode not in ("freeze", "remove"):
+        raise AnimationError("fill_mode must be freeze or remove")
 
     attributes = {
         "values": ";".join(values),
         "keyTimes": key_times,
         "dur": f"{duration_ms:g}ms",
         "begin": f"{begin_ms:g}ms",
-        "repeatCount": f"{repeat_count:g}",
-        "fill": "freeze",
+        "repeatCount": repeat_count,
+        "fill": fill_mode,
+        "calcMode": calc_mode,
     }
+    if calc_mode == "spline":
+        splines = spec.get("key_splines")
+        if not isinstance(splines, (list, tuple)) or len(splines) != len(values) - 1:
+            raise AnimationError("key_splines must contain one curve per keyframe interval")
+        curves: list[str] = []
+        for curve in splines:
+            if not isinstance(curve, (list, tuple)) or len(curve) != 4:
+                raise AnimationError("each key_splines curve must contain four numbers")
+            curves.append(" ".join(f'{_number(value, "key_splines coordinate", 0, 1):g}' for value in curve))
+        attributes["keySplines"] = ";".join(curves)
+    elif "key_splines" in spec:
+        raise AnimationError("key_splines requires calc_mode spline")
 
-    if property_name in {"translate", "rotate", "scale"}:
+    if property_name == "motion-path":
+        motion_path = spec.get("motion_path")
+        if not isinstance(motion_path, str) or not motion_path.strip():
+            raise AnimationError("motion_path must contain SVG path data")
+        rotation = spec.get("motion_rotate", "auto")
+        if rotation not in ("auto", "auto-reverse"):
+            rotation = f'{_number(rotation, "motion_rotate", -360_000, 360_000):g}'
+        points = [_number(value, "motion-path value", 0, 1) for value in spec["values"]]
+        del attributes["values"]
+        attributes.update({
+            "path": motion_path, "rotate": rotation,
+            "keyPoints": ";".join(f"{point:g}" for point in points),
+        })
+        return target_id, ET.Element(_tag("animateMotion"), attributes)
+
+    if property_name in TRANSFORM_PROPERTIES:
+        additive = spec.get("additive", "replace")
+        if additive not in ("replace", "sum"):
+            raise AnimationError("additive must be replace or sum")
+        attributes["additive"] = additive
         attributes.update({"attributeName": "transform", "type": property_name})
         return target_id, ET.Element(_tag("animateTransform"), attributes)
 
