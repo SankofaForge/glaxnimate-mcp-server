@@ -52,7 +52,8 @@ class LottieTests(unittest.TestCase):
         self.assertEqual([item['nm'] for item in children[:-1]], ['front', 'back'])
         front, back = children[:2]
         self.assertEqual([item['ty'] for item in front['it']], ['sh', 'st', 'tr'])
-        fill = next(item for item in back['it'] if item['ty'] == 'fl')
+        self.assertEqual([item['ty'] for item in back['it']], ['sh', 'st', 'fl', 'tr'])
+        fill =next(item for item in back['it'] if item['ty'] == 'fl')
         stroke = next(item for item in back['it'] if item['ty'] == 'st')
         self.assertEqual(fill['c']['k'], [170 / 255, 187 / 255, 204 / 255])
         self.assertEqual(fill['r'], 2)
@@ -82,8 +83,8 @@ class LottieTests(unittest.TestCase):
         result = export_lottie(svg, [channel('stroke', ['red', 'green']), channel('fill-opacity', [0, 1]),
                                     channel('stroke-opacity', [0, 1]), channel('stroke-width', [1, 3])])
         paint = groups(result)[0]['it']
-        self.assertEqual(paint[1]['o']['k'][-1]['s'], [100])
-        self.assertEqual(paint[2]['w']['k'][-1]['s'], [3])
+        self.assertEqual(paint[2]['o']['k'][-1]['s'], [100])
+        self.assertEqual(paint[1]['w']['k'][-1]['s'], [3])
 
     def test_transform_replacement_and_addition(self) -> None:
         svg = document('<rect id="shape" width="10" height="10" transform="translate(3,4) scale(2) skewY(5)"/>')

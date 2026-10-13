@@ -160,7 +160,7 @@ class MatteTests(unittest.TestCase):
         self.assertEqual((matte['td'], content['tt'], content['nm']), (1, 1, 'shape'))
         self.assertEqual(front['shapes'][0]['nm'], 'front')
         self.assertEqual(back['shapes'][0]['nm'], 'back')
-        self.assertEqual(content['shapes'][0]['it'][0]['it'][0]['it'][1]['c']['k'], [0, 0, 1])
+        self.assertEqual(content['shapes'][0]['it'][0]['it'][0]['it'][2]['c']['k'], [0, 0, 1])
         outer = matte['shapes'][0]
         self.assertEqual(outer['it'][-1]['p']['k'], [3, 4])
         self.assertEqual(outer['it'][0]['it'][-1]['p']['a'], 1)

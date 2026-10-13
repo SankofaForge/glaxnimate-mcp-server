@@ -376,7 +376,8 @@ def export_lottie(svg: str, animations: Sequence[Mapping[str, object]], fps: flo
                 if morph is not None:
                     shape = _animated(morph, fps, lambda value: [_path(value)[index]], [path])
                 items.append({"ty": "sh", "ks": shape, "d": 1})
-            for paint, solid, gradient in (("fill", "fl", "gf"), ("stroke", "st", "gs")):
+            # Lottie draws earlier items on top, so the stroke goes first to paint over the fill as SVG does.
+            for paint, solid, gradient in (("stroke", "st", "gs"), ("fill", "fl", "gf")):
                 value = styles.get(paint, "black" if paint == "fill" else "none")
                 if value == "none":
                     continue
