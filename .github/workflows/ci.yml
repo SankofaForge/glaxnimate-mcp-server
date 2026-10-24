@@ -28,6 +28,10 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v9
+      - name: Reject Any in Python annotations
+        run: uvx --from ruff==0.17.1 ruff check --select ANN401 src tests
 
       - name: Install dependencies
         run: |

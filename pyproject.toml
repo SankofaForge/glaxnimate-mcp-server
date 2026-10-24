@@ -34,6 +34,7 @@ packages = ["src/glaxnimate_mcp"]
 testpaths = ["tests"]
 pythonpath = ["src"]
 addopts = "--cov=glaxnimate_mcp --cov-report=term-missing --cov-fail-under=100"
+filterwarnings = ["error::DeprecationWarning"]
 
 [tool.coverage.run]
 source = ["glaxnimate_mcp"]

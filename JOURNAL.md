@@ -23,3 +23,7 @@ Lottie keeps one shape layer unless the root has an image, clip-path, or mask ch
 Sampled static frames are computed in Python rather than read back from a browser, so the export needs no rendering dependency. Priority follows SMIL: later begin times win, then array order. Motion paths are flattened at 256 steps per curve; Chromium comparisons stay within 0.02 on rotation terms and 0.6 px on position.
 
 The current feature inventory and gaps are in PARITY.md. Remaining work includes snapping and closed-contour handle mirroring, Lottie fonts/filters and nested mattes, exact easing and player API comparisons, export controls/optimization, native device behavior, and differential fixtures. Raw authorized research captures stay outside the repository.
+
+## 2026-10-23: Reject Any annotations and deprecated APIs #decision
+
+Ruff ANN401 now checks `src` and `tests`, and pytest treats Python DeprecationWarning as an error. The pinned Ruff command runs in CI without changing project dependencies.
