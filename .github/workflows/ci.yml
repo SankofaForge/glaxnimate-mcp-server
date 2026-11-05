@@ -38,6 +38,8 @@ jobs:
           cache: pip
       - name: Set up uv
         uses: astral-sh/setup-uv@v10.3.3
+        with:
+          enable-cache: true
       - name: Reject Any in Python annotations
         run: uvx --from ruff==0.17.1 ruff check --select ANN401 src tests
 
